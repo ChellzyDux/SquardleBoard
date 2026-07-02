@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Squardle Scoreboard</title>
+<style>
+  :root{
+    --bg: #1b1e24;
+    --panel: #23272f;
+    --panel-line: #2f3440;
+    --ink: #eef0f2;
+    --ink-dim: #8d94a3;
+    --left: #4fb3a9;
+    --left-dim: #2e4d49;
+    --right: #d98f4a;
+    --right-dim: #4d3f2e;
+    --today: #dfe3e8;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    display:flex;
+    justify-content:center;
+    padding: 40px 20px 60px;
+  }
+
+  .page{
+    width: 100%;
+    max-width: 960px;
+  }
+
+  header{
+    text-align:center;
+    margin-bottom: 36px;
+  }
+
+  .eyebrow{
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  h1{
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 600;
+    font-size: 40px;
+    margin: 6px 0 0;
+    text-wrap: balance;
+  }
+
+  h1 span.sq{
+    display:inline-block;
+    width: 0.72em;
+    height: 0.72em;
+    border-radius: 4px;
+    background: linear-gradient(135deg, var(--left), var(--right));
+    vertical-align: -0.08em;
+    margin-right: 2px;
+  }
+
+  .board{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 680px){
+    .board{ grid-template-columns: 1fr; }
+  }
+
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-top: 3px solid var(--side);
+    border-radius: 10px;
+    padding: 22px 22px 18px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .panel.left{ --side: var(--left); }
+  .panel.right{ --side: var(--right); }
+
+  .panel-label{
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--side);
+    margin-bottom: 14px;
+  }
+
+  .clock{
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 52px;
+    font-weight: 600;
+    text-align:center;
+    padding: 18px 0 20px;
+    letter-spacing: 0.01em;
+  }
+
+  .controls{
+    display:flex;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+
+  button{
+    flex:1;
+    border: 1px solid var(--panel-line);
+    background: #1b1e24;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 10px 6px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+  }
+
+  button:hover{ border-color: var(--side); }
+  button:active{ transform: translateY(1px); }
+  button:focus-visible{ outline: 2px solid var(--side); outline-offset: 2px; }
+
+  button.primary{
+    background: var(--side);
+    color: #14161a;
+    border-color: var(--side);
+  }
+
+  button:disabled{
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .history-label{
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 8px;
+  }
+
+  .history{
+    display:flex;
+    flex-direction:column;
+    gap: 6px;
+  }
+
+  .row{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    border-radius: 6px;
+    background: #1b1e24;
+    border: 1px solid var(--panel-line);
+  }
+
+  .row.today{
+    border-color: var(--side);
+    background: color-mix(in srgb, var(--side) 12%, #1b1e24);
+  }
+
+  .row .date{
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+
+  .row.today .date{
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .row .time{
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 15px;
+  }
+
+  .row.empty{
+    color: var(--ink-dim);
+    font-size: 13px;
+    justify-content:center;
+    border-style: dashed;
+  }
+
+  .panel-footer{
+    margin-top: 14px;
+    text-align:center;
+  }
+
+  .clear-link{
+    background:none;
+    border:none;
+    color: var(--ink-dim);
+    font-size: 11px;
+    text-decoration: underline;
+    cursor: pointer;
+    flex: none;
+    padding: 2px;
+  }
+
+  .clear-link:hover{ color: var(--ink); border:none; }
+
+  footer{
+    text-align:center;
+    color: var(--ink-dim);
+    font-size: 12px;
+    margin-top: 30px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <div class="eyebrow">Daily puzzle timer</div>
+    <h1><span class="sq"></span>Squardle Scoreboard</h1>
+  </header>
+
+  <div class="board">
+    <div class="panel left" data-side="left">
+      <div class="panel-label">Left</div>
+      <div class="clock" data-role="clock">00:00.00</div>
+      <div class="controls">
+        <button data-role="toggle" class="primary">Start</button>
+        <button data-role="save" disabled>Save</button>
+        <button data-role="reset">Reset</button>
+      </div>
+      <div class="history-label">Last 5 days</div>
+      <div class="history" data-role="history"></div>
+      <div class="panel-footer">
+        <button class="clear-link" data-role="clear">clear history</button>
+      </div>
+    </div>
+
+    <div class="panel right" data-side="right">
+      <div class="panel-label">Right</div>
+      <div class="clock" data-role="clock">00:00.00</div>
+      <div class="controls">
+        <button data-role="toggle" class="primary">Start</button>
+        <button data-role="save" disabled>Save</button>
+        <button data-role="reset">Reset</button>
+      </div>
+      <div class="history-label">Last 5 days</div>
+      <div class="history" data-role="history"></div>
+      <div class="panel-footer">
+        <button class="clear-link" data-role="clear">clear history</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Times save to this browser only &middot; saving today replaces today's entry</footer>
+</div>
+
+<script>
+(function(){
+  var STORAGE_PREFIX = "squardle-scoreboard-";
+
+  function pad(n, len){
+    n = String(Math.floor(n));
+    while(n.length < len) n = "0" + n;
+    return n;
+  }
+
+  function formatMs(ms){
+    var totalCentis = Math.floor(ms / 10);
+    var centis = totalCentis % 100;
+    var totalSeconds = Math.floor(totalCentis / 100);
+    var seconds = totalSeconds % 60;
+    var minutes = Math.floor(totalSeconds / 60);
+    return pad(minutes, 2) + ":" + pad(seconds, 2) + "." + pad(centis, 2);
+  }
+
+  function todayKey(){
+    var d = new Date();
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1, 2) + "-" + pad(d.getDate(), 2);
+  }
+
+  function formatDateLabel(key){
+    var parts = key.split("-").map(Number);
+    var d = new Date(parts[0], parts[1] - 1, parts[2]);
+    var weekday = d.toLocaleDateString(undefined, { weekday: "short" });
+    var month = d.toLocaleDateString(undefined, { month: "short" });
+    return weekday + ", " + month + " " + d.getDate();
+  }
+
+  function loadHistory(side){
+    try{
+      var raw = localStorage.getItem(STORAGE_PREFIX + side);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){
+      return [];
+    }
+  }
+
+  function saveHistory(side, entries){
+    localStorage.setItem(STORAGE_PREFIX + side, JSON.stringify(entries));
+  }
+
+  function upsertToday(side, ms){
+    var entries = loadHistory(side);
+    var key = todayKey();
+    entries = entries.filter(function(e){ return e.date !== key; });
+    entries.push({ date: key, ms: ms });
+    entries.sort(function(a, b){ return a.date < b.date ? 1 : -1; });
+    entries = entries.slice(0, 5);
+    saveHistory(side, entries);
+    return entries;
+  }
+
+  function initPanel(panelEl){
+    var side = panelEl.getAttribute("data-side");
+    var clockEl = panelEl.querySelector('[data-role="clock"]');
+    var toggleBtn = panelEl.querySelector('[data-role="toggle"]');
+    var saveBtn = panelEl.querySelector('[data-role="save"]');
+    var resetBtn = panelEl.querySelector('[data-role="reset"]');
+    var clearBtn = panelEl.querySelector('[data-role="clear"]');
+    var historyEl = panelEl.querySelector('[data-role="history"]');
+
+    var running = false;
+    var elapsed = 0;
+    var startedAt = 0;
+    var rafId = null;
+
+    function tick(){
+      elapsed = Date.now() - startedAt;
+      clockEl.textContent = formatMs(elapsed);
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function start(){
+      running = true;
+      startedAt = Date.now() - elapsed;
+      toggleBtn.textContent = "Stop";
+      saveBtn.disabled = true;
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function stop(){
+      running = false;
+      cancelAnimationFrame(rafId);
+      toggleBtn.textContent = "Start";
+      saveBtn.disabled = elapsed === 0;
+    }
+
+    function reset(){
+      stop();
+      elapsed = 0;
+      clockEl.textContent = formatMs(0);
+      saveBtn.disabled = true;
+    }
+
+    function renderHistory(){
+      var entries = loadHistory(side);
+      var key = todayKey();
+      historyEl.innerHTML = "";
+      if(entries.length === 0){
+        var empty = document.createElement("div");
+        empty.className = "row empty";
+        empty.textContent = "No times saved yet";
+        historyEl.appendChild(empty);
+        return;
+      }
+      entries.forEach(function(entry){
+        var row = document.createElement("div");
+        row.className = "row" + (entry.date === key ? " today" : "");
+        var dateEl = document.createElement("span");
+        dateEl.className = "date";
+        dateEl.textContent = entry.date === key ? "Today" : formatDateLabel(entry.date);
+        var timeEl = document.createElement("span");
+        timeEl.className = "time";
+        timeEl.textContent = formatMs(entry.ms);
+        row.appendChild(dateEl);
+        row.appendChild(timeEl);
+        historyEl.appendChild(row);
+      });
+    }
+
+    toggleBtn.addEventListener("click", function(){
+      if(running) stop(); else start();
+    });
+
+    saveBtn.addEventListener("click", function(){
+      if(elapsed === 0) return;
+      upsertToday(side, elapsed);
+      renderHistory();
+      reset();
+    });
+
+    resetBtn.addEventListener("click", reset);
+
+    clearBtn.addEventListener("click", function(){
+      if(!confirm("Clear saved history for the " + side + " side?")) return;
+      saveHistory(side, []);
+      renderHistory();
+    });
+
+    renderHistory();
+  }
+
+  document.querySelectorAll(".panel").forEach(initPanel);
+})();
+</script>
+</body>
+</html>
