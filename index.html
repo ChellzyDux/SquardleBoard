@@ -201,6 +201,31 @@
     cursor: not-allowed;
   }
 
+  .panel-summary{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 10px 12px;
+    margin-bottom: 18px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .panel-summary .label{
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  .panel-summary .value{
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
   .history-label{
     font-size: 11px;
     letter-spacing: 0.1em;
@@ -323,6 +348,10 @@
         <button data-role="save" disabled>Save</button>
         <button data-role="reset">Reset</button>
       </div>
+      <div class="panel-summary">
+        <span class="label">Average</span>
+        <span class="value" data-role="average">00:00.00</span>
+      </div>
       <div class="history-label">Last 5 saves</div>
       <div class="history" data-role="history"></div>
       <div class="panel-footer">
@@ -337,6 +366,10 @@
         <button data-role="toggle" class="primary">Start</button>
         <button data-role="save" disabled>Save</button>
         <button data-role="reset">Reset</button>
+      </div>
+      <div class="panel-summary">
+        <span class="label">Average</span>
+        <span class="value" data-role="average">00:00.00</span>
       </div>
       <div class="history-label">Last 5 saves</div>
       <div class="history" data-role="history"></div>
@@ -373,12 +406,10 @@
     return d.getFullYear() + "-" + pad(d.getMonth() + 1, 2) + "-" + pad(d.getDate(), 2);
   }
 
-  function formatDateLabel(key){
+  function formatDayLabel(key){
     var parts = key.split("-").map(Number);
     var d = new Date(parts[0], parts[1] - 1, parts[2]);
-    var weekday = d.toLocaleDateString(undefined, { weekday: "short" });
-    var month = d.toLocaleDateString(undefined, { month: "short" });
-    return weekday + ", " + month + " " + d.getDate();
+    return d.toLocaleDateString(undefined, { weekday: "short" });
   }
 
   function formatTimeLabel(timestamp){
@@ -394,6 +425,12 @@
     }catch(e){
       return [];
     }
+  }
+
+  function getAverageMs(entries){
+    if(!entries.length) return 0;
+    var total = entries.reduce(function(sum, entry){ return sum + (entry.ms || 0); }, 0);
+    return Math.round(total / entries.length);
   }
 
   function saveHistory(side, entries){
@@ -429,6 +466,7 @@
     var resetBtn = panelEl.querySelector('[data-role="reset"]');
     var clearBtn = panelEl.querySelector('[data-role="clear"]');
     var historyEl = panelEl.querySelector('[data-role="history"]');
+    var averageEl = panelEl.querySelector('[data-role="average"]');
 
     var running = false;
     var elapsed = 0;
@@ -465,8 +503,8 @@
 
     function renderHistory(){
       var entries = loadHistory(side);
-      var key = todayKey();
       historyEl.innerHTML = "";
+      averageEl.textContent = entries.length ? formatMs(getAverageMs(entries)) : "—";
       if(entries.length === 0){
         var empty = document.createElement("div");
         empty.className = "row empty";
@@ -476,15 +514,10 @@
       }
       entries.forEach(function(entry){
         var row = document.createElement("div");
-        row.className = "row" + (entry.date === key ? " today" : "");
+        row.className = "row" + (entry.date === todayKey() ? " today" : "");
         var dateEl = document.createElement("span");
         dateEl.className = "date";
-        if(entry.date === key){
-          var savedText = formatTimeLabel(entry.savedAt);
-          dateEl.textContent = savedText ? "Today · " + savedText : "Today";
-        } else {
-          dateEl.textContent = formatDateLabel(entry.date);
-        }
+        dateEl.textContent = formatDayLabel(entry.date);
         var timeEl = document.createElement("span");
         timeEl.className = "time";
         timeEl.textContent = formatMs(entry.ms);
