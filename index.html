@@ -382,7 +382,9 @@
   }
 
   function formatTimeLabel(timestamp){
-    return new Date(timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    var date = new Date(Number(timestamp));
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   }
 
   function loadHistory(side){
@@ -477,7 +479,12 @@
         row.className = "row" + (entry.date === key ? " today" : "");
         var dateEl = document.createElement("span");
         dateEl.className = "date";
-        dateEl.textContent = entry.date === key ? "Today · " + formatTimeLabel(entry.savedAt) : formatDateLabel(entry.date);
+        if(entry.date === key){
+          var savedText = formatTimeLabel(entry.savedAt);
+          dateEl.textContent = savedText ? "Today · " + savedText : "Today";
+        } else {
+          dateEl.textContent = formatDateLabel(entry.date);
+        }
         var timeEl = document.createElement("span");
         timeEl.className = "time";
         timeEl.textContent = formatMs(entry.ms);
